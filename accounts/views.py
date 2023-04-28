@@ -84,4 +84,3 @@ def user_user_delete_rest(request, format=None):
             return Response({'Dato inválido'})
     else: 
         return Response({"Error método no soportado"})
-

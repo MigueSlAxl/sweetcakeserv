@@ -8,4 +8,4 @@ accounts_patterns = [
     path('user_user_list_rest/',views.user_user_list_rest),
     path('user_user_update_rest/',views.user_user_update_rest),
     path('user_user_delete_rest/',views.user_user_delete_rest),
-]
+] 
