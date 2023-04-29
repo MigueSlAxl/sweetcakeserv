@@ -44,28 +44,24 @@ def user_user_list_rest(request, format=None):
 def user_user_update_rest(request, format=None):
     if request.method == 'POST':
         try:
-            id = request.data['ID']
-            username=request.data['username']
-            first_name=request.data['first_name']
-            last_name=request.data['last_name']
-            email=request.data['email']
-            password=request.data['password']
-            users_array = User.objects.get(pk=id)
-            users_array.username=username
-            users_array.first_name=first_name
-            users_array.last_name=last_name
-            users_array.email=email
-            users_array.password=password
+            user_id=request.data['ID']
+            user_obj = User.objects.get(pk=user_id)
+            user_obj.username=request.data['username']
+            user_obj.first_name=request.data['first_name']
+            user_obj.last_name=request.data['last_name']
+            user_obj.email=request.data['email']
+            user_obj.password=request.data['password']
+            if user_obj.username != '' and user_obj.first_name != '' and user_obj.last_name != '' and user_obj.email != '' and user_obj.password != '':
+                user_obj.save()
+                user_json=[]
+                user_json.append({'id':user_obj.id,'username':user_obj.username,'first_name':user_obj.first_name,'last_name':user_obj.last_name,'email': user_obj.email,'password':user_obj.password})
+                return Response({'Msj':"Datos Actualizados", 'user_data': user_json}) 
+            else:
+                return Response({'Msj': "Error: los datos no pueden estar en blanco"})
         except User.DoesNotExist:
-            return Response({'No existe'})
+            return Response({'Msj':"Error: no hay coincidencias"})
         except ValueError:
-            return Response({'Dato Invalido'})
-    else: 
-        return Response({"Error método no soportado"})
-    
-    # agregar una respuesta de éxito
-    return Response({'Actualización exitosa'})
-
+            return Response({'Msj':"Valor no soportado"})
 
 @api_view(['POST'])
 def user_user_delete_rest(request, format=None):

@@ -43,25 +43,31 @@ def productos_productos_list_rest(request, format=None):
 def productos_productos_update_rest(request, format=None):
     if request.method == 'POST':
         try:
-            id = request.data['ID']
-            nombre=request.data['nombre']
-            Precio=request.data['precio']
-            fecha_elaboracion=request.data['fecha_elaboracion']
-            fecha_vencimiento=request.data['fecha_vencimiento']
-            productos_array = Productos.objects.get(pk=id)
-            productos_array.nombre=nombre
-            productos_array.precio=Precio
-            productos_array.fecha_elaboracion=fecha_elaboracion
-            productos_array.fecha_vencimiento=fecha_vencimiento
+            producto_id=request.data['ID']
+            nombre= request.data['nombre']
+            categoria = request.data['categoria']
+            precio = request.data['precio']
+            fecha_elaboracion = request.data['fecha_elaboracion']
+            fecha_vencimiento = request.data['fecha_vencimiento']
+            if nombre != '' and categoria!='' and precio!='' and fecha_elaboracion != '' and fecha_vencimiento!='':
+                Productos.objects.filter(pk=producto_id).update(nombre=nombre)
+                Productos.objects.filter(pk=producto_id).update(categoria=categoria)
+                Productos.objects.filter(pk=producto_id).update(precio=precio) 
+                Productos.objects.filter(pk=producto_id).update(fecha_elaboracion=fecha_elaboracion)
+                Productos.objects.filter(pk=producto_id).update(fecha_vencimiento=fecha_vencimiento)
+                producto_json=[]
+                producto_array = Productos.objects.get(pk=producto_id)
+                producto_json.append({'id':producto_array.id,'nombre':producto_array.nombre,'categoria':producto_array.categoria,'fecha_elaboracion':producto_array.fecha_elaboracion,'fecha_vencimiento': producto_array.fecha_vencimiento,'matricula':producto_array.precio})
+                return Response({'Msj':"Datos Actualizados",producto_array.nombre:producto_json}) 
+            else:
+                return Response({'Msj': "Error los datos no pueden estar en blanco"})
         except Productos.DoesNotExist:
-            return Response({'No existe'})
+            return Response({'Msj':"Error no hay coincidencias"})
         except ValueError:
-            return Response({'Dato Invalido'})
-    else: 
-        return Response({"Error método no soportado"})
-    
-    # agregar una respuesta de éxito
-    return Response({'Actualización exitosa'})
+            return Response({'Msj':"Valor no soportado"})
+    else:
+        return Response({'Msj':"Metodo no soportado"})
+
 
 
 @api_view(['POST'])

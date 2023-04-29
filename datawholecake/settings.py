@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-n(lpa84q-#^f0rsmvt(&dogcan!&-282y$n*xkwoqdd+ebpu6g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.7']
+ALLOWED_HOSTS = ['sweetcake.cthtgt09opzq.us-east-1.rds.amazonaws.com']
 
 
 # Application definition
@@ -79,10 +79,10 @@ WSGI_APPLICATION = 'datawholecake.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'proyecto',
+        'NAME': 'sweetcake',
         'USER': 'postgres',
         'PASSWORD': 'kissisl0ve',
-        'HOST': '127.0.0.1',
+        'HOST': 'sweetcake.cthtgt09opzq.us-east-1.rds.amazonaws.com',
         'DATABASES_PORT': '5432',
     }
 }
