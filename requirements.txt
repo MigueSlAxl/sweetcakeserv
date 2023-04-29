@@ -1,4 +1,4 @@
-django==2.0.2
+django==4.1
 Pillow 
 pylint
 pylint-django
@@ -9,5 +9,5 @@ pandas
 django-mathfilters
 djangorestframework
 psycopg2==2.8.5
-djangorestframework==3.11.2
+djangorestframework
 django-manifest-loader
