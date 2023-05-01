@@ -1,41 +1,44 @@
 from django.shortcuts import render
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, serializers,status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import (api_view, authentication_classes, permission_classes)
+from drf_extra_fields.fields import Base64ImageField
+from django.http import JsonResponse
 
 from productos.models import Productos
 # Create your views here.
-
+class ProductoSerializadorImagenJson(serializers.ModelSerializer):
+    imagen=Base64ImageField(required=False)
+    class Meta:
+        model=Productos
+        fields=['nombre','precio','fecha_elaboracion','fecha_vencimiento','categoria','imagen']
 @api_view(['POST'])
 def productos_productos_add_rest(request, format=None):
     if request.method == 'POST':
-        nombre=request.data['nombre']
-        # if nombre=="":
-        #     return Response({'Msj':'El nombre no puede ir vacio'})
-        fecha_elaboracion=request.data['fecha_elaboracion']
-        fecha_vencimiento=request.data['fecha_vencimiento']
-        precio=request.data['precio']
-        producto_save=Productos(
-            nombre=nombre,
-            precio=precio,
-            fecha_elaboracion=fecha_elaboracion,
-            fecha_vencimiento=fecha_vencimiento,
-        )
-        producto_save.save()
-        return Response({'Msj':"Producto Creado"})
-    else:
-       return Response({'Msj': "Error método no soportado"})
+        serializer = ProductoSerializadorImagenJson(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'Msj': 'Producto creado'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+class ProductosSerializer(serializers.ModelSerializer):
+    imagen = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Productos
+        fields = ('id', 'nombre', 'precio', 'fecha_elaboracion', 'fecha_vencimiento', 'categoria', 'imagen')
+
+    def get_imagen(self, obj):
+        return obj.imagen_base64()
+    
 @api_view(['GET'])
 def productos_productos_list_rest(request, format=None):
     if request.method == 'GET':
         productos_list = Productos.objects.all()
-        productos_json = []
-        for pr in productos_list:
-            productos_json.append({'nombre':pr.nombre,'precio':pr.precio,'fecha_elaboracion':pr.fecha_elaboracion,'fecha_vencimiento':pr.fecha_vencimiento})
-        return Response({'List':productos_json})
+        serializer = ProductosSerializer(productos_list, many=True)
+        return JsonResponse({'List': serializer.data}, safe=False)
     else:
         return Response({'Msj':"Error método no soportado"})
 
@@ -57,7 +60,7 @@ def productos_productos_update_rest(request, format=None):
                 Productos.objects.filter(pk=producto_id).update(fecha_vencimiento=fecha_vencimiento)
                 producto_json=[]
                 producto_array = Productos.objects.get(pk=producto_id)
-                producto_json.append({'id':producto_array.id,'nombre':producto_array.nombre,'categoria':producto_array.categoria,'fecha_elaboracion':producto_array.fecha_elaboracion,'fecha_vencimiento': producto_array.fecha_vencimiento,'matricula':producto_array.precio})
+                producto_json.append({'id':producto_array.id,'nombre':producto_array.nombre,'categoria':producto_array.categoria,'fecha_elaboracion':producto_array.fecha_elaboracion,'fecha_vencimiento': producto_array.fecha_vencimiento,'precio':producto_array.precio})
                 return Response({'Msj':"Datos Actualizados",producto_array.nombre:producto_json}) 
             else:
                 return Response({'Msj': "Error los datos no pueden estar en blanco"})
@@ -68,13 +71,11 @@ def productos_productos_update_rest(request, format=None):
     else:
         return Response({'Msj':"Metodo no soportado"})
 
-
-
 @api_view(['POST'])
 def productos_productos_delete_rest(request, format=None):
     if request.method =='POST':
         try: 
-            id = request.data['Eliminar ID']
+            id = request.data['id']
             if isinstance(id, int):
                 productos_array=Productos.objects.get(pk=id)
                 productos_array.delete()

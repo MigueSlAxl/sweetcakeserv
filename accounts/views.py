@@ -6,7 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import (api_view, authentication_classes, permission_classes)
 from accounts.models import User,Profile
 
-
 @csrf_exempt
 @api_view(['POST'])
 def user_user_add_rest(request, format=None):
@@ -16,18 +15,27 @@ def user_user_add_rest(request, format=None):
         last_name=request.data['last_name']
         email=request.data['email']
         password=request.data['password']
+        rut=request.data['rut']
+        direccion=request.data['direccion']
+        ntelefono=request.data['ntelefono']
+        nemergencia=request.data['nemergencia']
+        local=request.data['local']
         user_save=User(
             username=username,
             first_name=first_name,
             last_name=last_name,
             email=email,
             password=password,
+            rut = rut,
+            direccion=direccion, 
+            ntelefono=ntelefono, 
+            nemergencia=nemergencia,
+            local=local,
         )
         user_save.save()
         return Response({'Msj':"Usuario Creado"})
     else:
         return Response({'Msj': "Error método no soportado"})
-    
 
 @api_view(['GET'])
 def user_user_list_rest(request, format=None):
@@ -35,7 +43,7 @@ def user_user_list_rest(request, format=None):
         user_list = User.objects.all()
         user_json = []
         for us in user_list:
-            user_json.append({'username':us.username,'first_name':us.first_name,'last_name':us.last_name,'email':us.email})
+            user_json.append({'username':us.username,'first_name':us.first_name,'last_name':us.last_name,'email':us.email, 'rut':us.rut,'direccion':us.direccion,'ntelefono':us.ntelefono,'nemergencia':us.nemergencia,'local':us.local})
         return Response({'Users':user_json})
     else:
         return Response({'Msj':"Error método no soportado"})
@@ -51,10 +59,15 @@ def user_user_update_rest(request, format=None):
             user_obj.last_name=request.data['last_name']
             user_obj.email=request.data['email']
             user_obj.password=request.data['password']
+            user_obj.rut=request.data['rut']
+            user_obj.direccion=request.data['direccion']
+            user_obj.ntelefono=request.data['ntelefono']
+            user_obj.nemergencia=request.data['nemergencia']
+            user_obj.local=request.data['local']
             if user_obj.username != '' and user_obj.first_name != '' and user_obj.last_name != '' and user_obj.email != '' and user_obj.password != '':
                 user_obj.save()
                 user_json=[]
-                user_json.append({'id':user_obj.id,'username':user_obj.username,'first_name':user_obj.first_name,'last_name':user_obj.last_name,'email': user_obj.email,'password':user_obj.password})
+                user_json.append({'id':user_obj.id,'username':user_obj.username,'first_name':user_obj.first_name,'last_name':user_obj.last_name,'email': user_obj.email,'password':user_obj.password, 'rut':user_obj.rut,'direccion':user_obj.direccion,'ntelefono':user_obj.ntelefono,'nemergencia':user_obj.nemergencia,'local':user_obj.local})
                 return Response({'Msj':"Datos Actualizados", 'user_data': user_json}) 
             else:
                 return Response({'Msj': "Error: los datos no pueden estar en blanco"})
