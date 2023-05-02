@@ -17,18 +17,17 @@ class ProductoSerializadorImagenJson(serializers.ModelSerializer):
     imagen=Base64ImageField(required=False)
     class Meta:
         model=Productos
-        fields=['nombre','precio','fecha_elaboracion','fecha_vencimiento','categoria','imagen']
+        fields=['id','nombre','precio','fecha_elaboracion','fecha_vencimiento','categoria','imagen']
 
 @api_view(['POST'])
 def productos_productos_add_rest(request, format=None):
     if request.method == 'POST':
         serializer = ProductoSerializadorImagenJson(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({'Msj': 'Producto creado'}, status=status.HTTP_201_CREATED)
+            producto = serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class ProductosSerializer(serializers.ModelSerializer):
     imagen = serializers.SerializerMethodField()
 
