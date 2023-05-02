@@ -24,7 +24,7 @@ def user_user_add_rest(request, format=None):
         ntelefono=request.data['ntelefono']
         nemergencia=request.data['nemergencia']
         local=request.data['local']
-        user_save=Profile.objects.create(
+        user_save=User(
             username=username,
             first_name=first_name,
             last_name=last_name,
@@ -46,7 +46,7 @@ def user_user_add_rest(request, format=None):
 @api_view(['GET'])
 def user_user_list_rest(request, format=None):
     if request.method == 'GET':
-        user_list = Profile.objects.all()
+        user_list = User.objects.all()
         user_json = []
         for us in user_list:
             user_json.append({'username':us.username,'first_name':us.first_name,'last_name':us.last_name,'email':us.email, 'rut':us.rut,'direccion':us.direccion,'ntelefono':us.ntelefono,'nemergencia':us.nemergencia,'local':us.local})
@@ -59,7 +59,7 @@ def user_user_update_rest(request, format=None):
     if request.method == 'POST':
         try:
             user_id=request.data['ID']
-            user_obj = Profile.objects.get(pk=user_id)
+            user_obj = User.objects.get(pk=user_id)
             user_obj.username=request.data['username']
             user_obj.first_name=request.data['first_name']
             user_obj.last_name=request.data['last_name']
@@ -93,7 +93,7 @@ def user_user_delete_rest(request, format=None):
                 return Response({'Usuario eliminado con éxito'})
             else:
                 return Response({'Ingrese un número entero'})
-        except Profile.DoesNotExist:
+        except User.DoesNotExist:
             return Response({'No existe la ID en la BBDD'})
         except ValueError:
             return Response({'Dato inválido'})
