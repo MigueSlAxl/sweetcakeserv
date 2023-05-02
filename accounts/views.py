@@ -5,7 +5,11 @@ from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import (api_view, authentication_classes, permission_classes)
 from accounts.models import User,Profile
+from accounts import models
 
+
+
+from django.db import models
 @csrf_exempt
 @api_view(['POST'])
 def user_user_add_rest(request, format=None):
@@ -20,7 +24,7 @@ def user_user_add_rest(request, format=None):
         ntelefono=request.data['ntelefono']
         nemergencia=request.data['nemergencia']
         local=request.data['local']
-        user_save=User(
+        user_save=Profile.objects.create(
             username=username,
             first_name=first_name,
             last_name=last_name,
@@ -37,10 +41,12 @@ def user_user_add_rest(request, format=None):
     else:
         return Response({'Msj': "Error método no soportado"})
 
+
+
 @api_view(['GET'])
 def user_user_list_rest(request, format=None):
     if request.method == 'GET':
-        user_list = User.objects.all()
+        user_list = Profile.objects.all()
         user_json = []
         for us in user_list:
             user_json.append({'username':us.username,'first_name':us.first_name,'last_name':us.last_name,'email':us.email, 'rut':us.rut,'direccion':us.direccion,'ntelefono':us.ntelefono,'nemergencia':us.nemergencia,'local':us.local})
@@ -53,7 +59,7 @@ def user_user_update_rest(request, format=None):
     if request.method == 'POST':
         try:
             user_id=request.data['ID']
-            user_obj = User.objects.get(pk=user_id)
+            user_obj = Profile.objects.get(pk=user_id)
             user_obj.username=request.data['username']
             user_obj.first_name=request.data['first_name']
             user_obj.last_name=request.data['last_name']
@@ -71,7 +77,7 @@ def user_user_update_rest(request, format=None):
                 return Response({'Msj':"Datos Actualizados", 'user_data': user_json}) 
             else:
                 return Response({'Msj': "Error: los datos no pueden estar en blanco"})
-        except User.DoesNotExist:
+        except Profile.DoesNotExist:
             return Response({'Msj':"Error: no hay coincidencias"})
         except ValueError:
             return Response({'Msj':"Valor no soportado"})
@@ -82,12 +88,12 @@ def user_user_delete_rest(request, format=None):
         try: 
             id = request.data['Eliminar ID']
             if isinstance(id, int):
-                productos_array=User.objects.get(pk=id)
+                productos_array=Profile.objects.get(pk=id)
                 productos_array.delete()
                 return Response({'Usuario eliminado con éxito'})
             else:
                 return Response({'Ingrese un número entero'})
-        except User.DoesNotExist:
+        except Profile.DoesNotExist:
             return Response({'No existe la ID en la BBDD'})
         except ValueError:
             return Response({'Dato inválido'})
