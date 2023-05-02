@@ -5,11 +5,7 @@ from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import (api_view, authentication_classes, permission_classes)
 from accounts.models import User,Profile
-from accounts import models
 
-
-
-from django.db import models
 @csrf_exempt
 @api_view(['POST'])
 def user_user_add_rest(request, format=None):
@@ -19,29 +15,18 @@ def user_user_add_rest(request, format=None):
         last_name=request.data['last_name']
         email=request.data['email']
         password=request.data['password']
-        rut=request.data['rut']
-        direccion=request.data['direccion']
-        ntelefono=request.data['ntelefono']
-        nemergencia=request.data['nemergencia']
-        local=request.data['local']
         user_save=User(
             username=username,
             first_name=first_name,
             last_name=last_name,
             email=email,
             password=password,
-            rut = rut,
-            direccion=direccion, 
-            ntelefono=ntelefono, 
-            nemergencia=nemergencia,
-            local=local,
+
         )
         user_save.save()
         return Response({'Msj':"Usuario Creado"})
     else:
         return Response({'Msj': "Error método no soportado"})
-
-
 
 @api_view(['GET'])
 def user_user_list_rest(request, format=None):
@@ -65,19 +50,15 @@ def user_user_update_rest(request, format=None):
             user_obj.last_name=request.data['last_name']
             user_obj.email=request.data['email']
             user_obj.password=request.data['password']
-            user_obj.rut=request.data['rut']
-            user_obj.direccion=request.data['direccion']
-            user_obj.ntelefono=request.data['ntelefono']
-            user_obj.nemergencia=request.data['nemergencia']
-            user_obj.local=request.data['local']
+
             if user_obj.username != '' and user_obj.first_name != '' and user_obj.last_name != '' and user_obj.email != '' and user_obj.password != '':
                 user_obj.save()
                 user_json=[]
-                user_json.append({'id':user_obj.id,'username':user_obj.username,'first_name':user_obj.first_name,'last_name':user_obj.last_name,'email': user_obj.email,'password':user_obj.password, 'rut':user_obj.rut,'direccion':user_obj.direccion,'ntelefono':user_obj.ntelefono,'nemergencia':user_obj.nemergencia,'local':user_obj.local})
+                user_json.append({'id':user_obj.id,'username':user_obj.username,'first_name':user_obj.first_name,'last_name':user_obj.last_name,'email': user_obj.email,'password':user_obj.password, })
                 return Response({'Msj':"Datos Actualizados", 'user_data': user_json}) 
             else:
                 return Response({'Msj': "Error: los datos no pueden estar en blanco"})
-        except Profile.DoesNotExist:
+        except User.DoesNotExist:
             return Response({'Msj':"Error: no hay coincidencias"})
         except ValueError:
             return Response({'Msj':"Valor no soportado"})
@@ -88,7 +69,7 @@ def user_user_delete_rest(request, format=None):
         try: 
             id = request.data['Eliminar ID']
             if isinstance(id, int):
-                productos_array=Profile.objects.get(pk=id)
+                productos_array=User.objects.get(pk=id)
                 productos_array.delete()
                 return Response({'Usuario eliminado con éxito'})
             else:
