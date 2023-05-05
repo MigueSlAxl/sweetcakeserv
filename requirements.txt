@@ -8,6 +8,6 @@ xlrd
 pandas
 django-mathfilters
 djangorestframework
-psycopg2==2.8.5
+psycopg2==2.8.6
 djangorestframework
 django-manifest-loader

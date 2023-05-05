@@ -37,7 +37,9 @@ class ProductosSerializer(serializers.ModelSerializer):
 
     def get_imagen(self, obj):
         return obj.imagen_base64()
-    
+
+
+
 @api_view(['GET'])
 def productos_productos_list_rest(request, format=None):
     if request.method == 'GET':
