@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from rest_framework import generics, serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from accounts.models import User
+from accounts.models import User, AbstractBaseUser, BaseUserManager , CustomUserManager , PermissionsMixin
 import os
 from django.conf import settings
 
@@ -44,6 +44,8 @@ def user_user_list_rest(request, format=None):
         return JsonResponse({'List': serializer.data}, safe=False)
     else:
         return Response({'Msj': "Error método no soportado"})
+
+
 
 
     
@@ -133,3 +135,6 @@ def user_user_delete_rest(request, user_id):
             return Response({'Dato inválido'})
     else: 
         return Response({"Error método no soportado"})
+    
+    
+    
