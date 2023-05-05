@@ -83,8 +83,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'sweetcake',
         'USER': 'postgres',
-        'PASSWORD': 'Nari',
-        'HOST': 'localhost',
+        'PASSWORD': 'pasteldetula',
+        'HOST': 'sweetcake.cthtgt09opzq.us-east-1.rds.amazonaws.com',
         'DATABASES_PORT': '5432',
     }
 }
