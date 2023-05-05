@@ -53,18 +53,19 @@ def productos_productos_list_rest(request, format=None):
 def productos_productos_update_rest(request, format=None):
     if request.method == 'POST':
         try:
-            producto_id=request.data['productoId']
+            producto_id=request.data['ID']
             nombre= request.data['nombre']
             categoria = request.data['categoria']
             precio = request.data['precio']
             fecha_elaboracion = request.data['fecha_elaboracion']
             fecha_vencimiento = request.data['fecha_vencimiento']
             imagen=request.data.get('imagen')  # Usar get() para evitar KeyError si la imagen no está presente
+
             # Si imagen no tiene ningún valor, establecer imagen_data como None y cargar una imagen predeterminada
             if imagen:
                 # Procesar la imagen
-                # data = imagen.split(',', 1)[1]  # Remover el prefijo 'data:image/png;base64,'
-                image_data = base64.b64decode(imagen)
+                data = imagen.split(',', 1)[1]  # Remover el prefijo 'data:image/png;base64,'
+                image_data = base64.b64decode(data)
                 image = Image.open(ContentFile(image_data))
 
                 # Guardar la imagen en el modelo de base de datos
