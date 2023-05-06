@@ -12,6 +12,9 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from PIL import Image
 import os
+
+
+
 # Create your views here.
 class ProductoSerializadorImagenJson(serializers.ModelSerializer):
     imagen=Base64ImageField(required=False)
@@ -78,7 +81,7 @@ def productos_productos_update_rest(request, format=None):
                 producto.imagen.save(f'{producto_id}.png', ContentFile(image_data), save=True)
             else:
                 # Si no se proporciona una imagen, establecer imagen_data como None y cargar la imagen predeterminada
-                image_path = os.path.join(settings.MEDIA_ROOT, 'productos/default.jpg')
+                image_path = os.path.join(settings.MEDIA_ROOT, 'media/productos/default.jpg')
                 with open(image_path, 'rb') as f:
                     image_data = f.read()
 
