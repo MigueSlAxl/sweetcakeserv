@@ -8,6 +8,9 @@ xlrd
 pandas
 django-mathfilters
 djangorestframework
-psycopg2==2.8.6
+psycopg2
 djangorestframework
 django-manifest-loader
+drf_extra_fields
+django-rest-knox
+knox

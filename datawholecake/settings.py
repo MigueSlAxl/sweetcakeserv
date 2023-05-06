@@ -33,15 +33,16 @@ ALLOWED_HOSTS = ['127.0.0.1','3.85.128.77:8000']
 # Application definition
 
 INSTALLED_APPS = [
-        'accounts',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'knox',
     'productos',
     'proveedores',
+    # 'accounts',
 ]
 
 MIDDLEWARE = [
@@ -81,10 +82,10 @@ WSGI_APPLICATION = 'datawholecake.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sweetcake',
+        'NAME': 'sweetcakesv',
         'USER': 'postgres',
-        'PASSWORD': 'pasteldetula',
-        'HOST': 'sweetcake.cthtgt09opzq.us-east-1.rds.amazonaws.com',
+        'PASSWORD': 'password',
+        'HOST': '127.0.0.1',
         'DATABASES_PORT': '5432',
     }
 }
