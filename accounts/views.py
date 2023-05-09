@@ -1,135 +1,187 @@
-from io import BytesIO
-import base64
-from PIL import Image
-from django.core.files.base import ContentFile
+from accounts.models import User, UserStandard
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import JsonResponse
-from rest_framework import generics, serializers, status
+from django.shortcuts import render, redirect
+from rest_framework import generics, status, viewsets
+from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from accounts.models import User
-import os
-from django.conf import settings
+from knox.auth import AuthToken
+from .forms import LoginForm, SignUpForm, editUserForm
+from .serializers import RegisterSerializer
+from .serializers import UserSerializer
+from rest_framework import serializers as serializers
+import re
+import requests
+from datetime import date, datetime
+# Create your views here.
 
 
+def correo_valido(email):
+    expresion_regular = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
+    return re.match(expresion_regular, email) is not None
+#####validador de imagen aun no lo uso
+def valid_extension(value):
+    if (not value.name.endswith('.png') and
+        not value.name.endswith('.jpeg') and
+        not value.name.endswith('.bmp') and
+            not value.name.endswith('.jpg')) and value.name is not None:
+            return Response({'Msj': 'Error, formato no permitido'})
+            
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'rut', 'direccion', 'ntelefono', 'nemergencia', 'local', 'imagen')
+@api_view(['POST'])
+def user_login_rest(request):
+    if request.method == 'POST':
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+
+        _, token = AuthToken.objects.create(user)
+
+        return Response({
+            'user_info': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            },
+            'token': token
+        })
+
+# Endpoint para tomar al usuario al iniciar sesion
+@api_view(['GET'])
+def get_user_rest(request):
+    if request.method == 'GET':
+        user = request.user
+        if user.is_authenticated:
+            return Response({
+                'user_info': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                }
+            })
+        else:
+            return Response({'error:': 'Usuario no autenticado'})
+
+
+##Registrar usuario admin
+@api_view(['POST'])
+def register_api(request):
+    serializer = RegisterSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    user = serializer.save()
+
+    User.objects.create(user=user.pk,
+        
+    )
+
+    _, token = AuthToken.objects.create(user)
+
+    return Response({
+        'token': token
+    })
+
+
 
 
 @api_view(['POST'])
+def login_user_rest(request):
+    if request.method == 'POST':
+        user = request.user
+        if user.is_authenticated:
+            
+            if user.is_client:
+                return Response ({'error:': 'Usuario no autenticado'})
+            if user.is_admin:
+                return redirect('pageadmin')
+        else:
+            form = LoginForm(request.POST or None)
+            msg = None
+            if request.method == 'POST':
+                if form.is_valid():
+                    username = form.cleaned_data.get('username')
+                    password = form.cleaned_data.get('password')
+                    if username == '' or password == '':
+                        msg = 'Los campos son requeridos'
+                    else:
+                        user = authenticate(username=username, password=password)
+                        if user is not None and user.is_admin:
+                            login(request, user)
+                        elif user is not None and user.is_client:
+                            login(request, user)
+                        else:
+                            msg = 'Credenciales invalidas'
+                else:
+                    msg = 'Error al validar forumulario'
+            return Response ({'error:': 'Usuario no autenticado'})
+
+
+
+## Logout 
+@api_view(['POST'])
+def logout_user_rest(request):
+    if request.method == 'POST':
+        msg = None
+        user = request.user
+        if user.is_authenticated:
+            logout(request)
+            msg = 'logout ok'
+            messages.add_message(request=request, level=messages.SUCCESS,
+                                message="Sesión cerrada correctamente")
+        else:
+            msg = 'invalid credentials'
+        return Response({'msg': msg})
+
+
+
+
+#crear usuario como admin
+@api_view(['POST'])
 def user_user_add_rest(request, format=None):
+    serializer = None
+
     if request.method == 'POST':
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            UserStandard.objects.create()
+            _, token = AuthToken.objects.create(user)
+            return Response({
+                'token': token,
+            })
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class UsuariosSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'rut', 'direccion', 'ntelefono', 'nemergencia', 'local','imagen')
-    def get_imagen(self, obj):
-        return obj.imagen_base64()
 
 @api_view(['GET'])
 def user_user_list_rest(request, format=None):
     if request.method == 'GET':
-        usuarios_list = User.objects.all()
-        serializer = UsuariosSerializer(usuarios_list, many=True)
-        return JsonResponse({'List': serializer.data}, safe=False)
-    else:
-        return Response({'Msj': "Error método no soportado"})
-
-
+            userstandard = UserStandard.objects.all()
+            serializer = UserSerializer(userstandard, many=True)
+            return Response(serializer.data)
+    return Response({'error': 'Unauthorized access'}, status=status.HTTP_401_UNAUTHORIZED)
     
+
+
+
 @api_view(['POST'])
-def user_user_update_rest(request, format=None):
-    if request.method == 'POST':
-        try:
-            user_id = request.data['ID']
-            first_name = request.data['first_name']
-            last_name = request.data['last_name']
-            email = request.data['email']
-            password = request.data['password']
-            rut = request.data.get('rut')
-            direccion = request.data.get('direccion')
-            ntelefono = request.data.get('ntelefono')
-            nemergencia = request.data.get('nemergencia')
-            local = request.data.get('local')
-            imagen=request.data.get('imagen')  # Usar get() para evitar KeyError si la imagen no está presente
+def user_user_delete_rest(request, format=None):
+    if request.method != 'POST':
+        return Response({'error': 'Método no permitido'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    try:
+        id = int(request.data['id'])
+    except (KeyError, ValueError):
+        return Response({'error': 'Ingrese un número entero'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        userstandard_array = UserStandard.objects.get(pk=id)
+    except UserStandard.DoesNotExist:
+        return Response({'error': 'No existe el usuario'}, status=status.HTTP_404_NOT_FOUND)
 
-            # Si imagen no tiene ningún valor, establecer imagen_data como None y cargar una imagen predeterminada
-            if imagen:
-                # Procesar la imagen
-                data = imagen.split(',', 1)[1]  # Remover el prefijo 'data:image/png;base64,'
-                image_data = base64.b64decode(data)
-                image = Image.open(ContentFile(image_data))
-            else:
-                # Si no se proporciona una imagen, establecer imagen_data como None y cargar la imagen predeterminada
-                image_path = os.path.join(settings.MEDIA_ROOT, 'accounts/default.jpg')
-                with open(image_path, 'rb') as f:
-                    image_data = f.read()
-
-            # Buscar al usuario por su ID
-            user = User.objects.get(pk=user_id)
-
-            # Actualizar los campos del usuario
-            user.first_name = first_name
-            user.last_name = last_name
-            user.email = email
-            user.set_password(password)
-            user.rut = rut
-            user.direccion = direccion
-            user.ntelefono = ntelefono
-            user.nemergencia = nemergencia
-            user.local = local
-            user.imagen.save(f'{user_id}.png', ContentFile(image_data), save=True)
-
-            # Guardar los cambios en la base de datos
-            user.save()
-
-            # Crear un diccionario con los datos actualizados del usuario
-            updated_user = {
-                'ID': user_id,
-                'first_name': first_name,
-                'last_name': last_name,
-                'email': email,
-                'rut': rut,
-                'direccion': direccion,
-                'ntelefono': ntelefono,
-                'nemergencia': nemergencia,
-                'local': local,
-                'imagen': imagen,
-            }
-
-            # Devolver los datos actualizados del usuario
-            return JsonResponse({'user': updated_user})
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return Response({'error': 'Método no soportado'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-@api_view 
-def user_user_delete_rest(request, user_id): 
-    if request.method =='POST': 
-        try: 
-            user_id=request.data['user_id']
-            if isinstance ( user_id, int):
-                user=User.objects.get(pk=user_id)
-                user.delete()
-                return Response({'Usuario eliminado con éxito'})
-            else:
-                return Response({'Ingrese un número entero'})
-        except User.DoesNotExist:
-            return Response({'No existe la ID en la BBDD'})
-        except ValueError:
-            return Response({'Dato inválido'})
-    else: 
-        return Response({"Error método no soportado"})
+    userstandard_array.delete()
+    return Response({'detail': 'Usuario eliminado con éxito'})

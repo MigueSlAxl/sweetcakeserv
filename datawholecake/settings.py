@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+from telnetlib import LOGOUT
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,15 +35,18 @@ ALLOWED_HOSTS = ['127.0.0.1','3.85.128.77:8000']
 # Application definition
 
 INSTALLED_APPS = [
-        'accounts',
     'django.contrib.admin',
+    'django_cleanup.apps.CleanupConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'knox',
+    'rest_framework',
     'productos',
     'proveedores',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -81,10 +86,10 @@ WSGI_APPLICATION = 'datawholecake.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sweetcake',
+        'NAME': 'sweetcake1',
         'USER': 'postgres',
-        'PASSWORD': 'pasteldetula',
-        'HOST': 'sweetcake.cthtgt09opzq.us-east-1.rds.amazonaws.com',
+        'PASSWORD': 'Nari',
+        'HOST': 'localhost',
         'DATABASES_PORT': '5432',
     }
 }

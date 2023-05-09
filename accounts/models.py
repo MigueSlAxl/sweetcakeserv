@@ -1,43 +1,32 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.core.files import File
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 import os
+from django.core.files import File
+import base64
 from django.conf import settings
+# Create your models here.
 
-
-class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password, **extra_fields):
-        if not email:
-            raise ValueError('The Email field must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self.create_user(email, password, **extra_fields)
-
-
-class User(AbstractBaseUser, PermissionsMixin):
-    first_name = models.CharField(max_length=100, verbose_name='first name')
-    last_name = models.CharField(max_length=100, verbose_name='last name')
-    email = models.EmailField(unique=True, verbose_name='email')
-    password = models.CharField(max_length=100, verbose_name='password')
-    rut = models.CharField(max_length=12, blank=True, null=True, verbose_name='RUT')
-    direccion = models.CharField(max_length=255, blank=True, null=True, verbose_name='direccion')
-    ntelefono = models.CharField(max_length=15, blank=True, null=True, verbose_name='numero de telefono')
-    nemergencia = models.CharField(max_length=15, blank=True, null=True, verbose_name='numero de emergencia')
-    local = models.CharField(max_length=50, blank=True, null=True, verbose_name='local')
-    imagen=models.ImageField(upload_to='accounts/',blank=False,null=True)
+class User(AbstractUser):
+    id = models.IntegerField(primary_key=True)
+    is_client = models.BooleanField(default=True, verbose_name="Cliente")
+    is_admin = models.BooleanField(default=False, verbose_name="Admin")
+    imagen = models.ImageField(upload_to='accounts/', blank=False, null=True)
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+        related_name='users'
+    )
+    
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        related_name='users'
+    )
     def imagen_base64(self):
         if self.imagen and hasattr(self.imagen, 'url'):
             with self.imagen.open(mode='rb') as f:
@@ -45,25 +34,64 @@ class User(AbstractBaseUser, PermissionsMixin):
             return base64.b64encode(img_data).decode('utf-8')
         else:
             return None
+
     def save(self, *args, **kwargs):
         if not self.imagen:
             # asigna la imagen por defecto si no se ha proporcionado una imagen
-            img_path = os.path.join(settings.MEDIA_ROOT, 'accounts\default.jpg')
+            img_path = os.path.join(settings.MEDIA_ROOT, 'accounts/default1.jpg')
             with open(img_path, 'rb') as f:
-                self.imagen.save('accouunts/default.jpg', File(f), save=False)
+                self.imagen.save('accounts/default1.jpg', File(f), save=False)
         super(User, self).save(*args, **kwargs)
-    
-    
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-
-    objects = CustomUserManager()
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name']
 
     class Meta:
+        verbose_name = "user"
+        verbose_name_plural = "users"
+
+
+
+
+class UserStandard(models.Model):
+    is_client = models.BooleanField(default=True, verbose_name="Cliente")
+    is_admin = models.BooleanField(default=False, verbose_name="Admin")
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=12, verbose_name="nombre", default="")
+    apellido = models.CharField(max_length=12, verbose_name="apellido", default="")
+    correo= models.CharField(max_length=20, verbose_name="correo", default="")
+    contraseña= models.CharField(max_length=12, verbose_name="cargo", default="")
+    cargo = models.CharField(max_length=12, verbose_name="cargo", default="")
+    rut = models.CharField(primary_key =True ,max_length=12, blank=True, null=True, verbose_name='RUT')
+    direccion = models.CharField(max_length=255, blank=True, null=True, verbose_name='direccion')
+    ntelefono = models.CharField(max_length=15, blank=True, null=True, verbose_name='numero de telefono')
+    nemergencia = models.CharField(max_length=15, blank=True, null=True, verbose_name='numero de emergencia')
+    local = models.CharField(max_length=50, blank=True, null=True, verbose_name='local')
+    imagen = models.ImageField(upload_to='accounts/', blank=False, null=True)
+    def imagen_base64(self):
+        if self.imagen and hasattr(self.imagen, 'url'):
+            with self.imagen.open(mode='rb') as f:
+                img_data = f.read()
+            return base64.b64encode(img_data).decode('utf-8')
+        else:
+            return None
+
+    def save(self, *args, **kwargs):
+        if not self.imagen:
+            # asigna la imagen por defecto si no se ha proporcionado una imagen
+            img_path = os.path.join(settings.MEDIA_ROOT, 'accounts/default1.jpg')
+            with open(img_path, 'rb') as f:
+                self.imagen.save('accounts/default1.jpg', File(f), save=False)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha creacion")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Fecha actualizacion")
+    deleted_at = models.DateTimeField(auto_now=False, verbose_name="Fecha eliminacion", blank=True, null=True)
+    
+
+    class Meta:
+        verbose_name = "userProfile"
+        verbose_name_plural = "userProfiles"
         ordering = ['id']
 
+
+
     def __str__(self):
-        return self.email
+        return self.user.username
+

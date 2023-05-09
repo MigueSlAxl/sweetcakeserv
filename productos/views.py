@@ -12,6 +12,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from PIL import Image
 import os
+
 # Create your views here.
 class ProductoSerializadorImagenJson(serializers.ModelSerializer):
     imagen=Base64ImageField(required=False)
@@ -101,6 +102,11 @@ def productos_productos_update_rest(request, format=None):
     else:
         return Response({'Msj':"Metodo no soportado"})
 
+
+
+
+
+
 @api_view(['POST'])
 def productos_productos_delete_rest(request, format=None):
     if request.method =='POST':
@@ -118,3 +124,6 @@ def productos_productos_delete_rest(request, format=None):
             return Response({'Dato inválido'})
     else: 
         return Response({"Error método no soportado"})
+    
+    
+    
