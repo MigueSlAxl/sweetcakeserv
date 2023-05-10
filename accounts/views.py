@@ -73,13 +73,13 @@ def register_api(request):
     serializer = RegisterSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    user = serializer.save()
+    User = serializer.save()
 
-    User.objects.create(user=user.pk,
-        
-    )
+    User.objects.create(
+        User=User.id    )
 
-    _, token = AuthToken.objects.create(user)
+    _, token = AuthToken.objects.create(User)
+    print(token)
 
     return Response({
         'token': token
@@ -143,13 +143,13 @@ def logout_user_rest(request):
 @api_view(['POST'])
 def user_user_add_rest(request, format=None):
     serializer = None
-
     if request.method == 'POST':
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            userstandard = serializer.save()
             UserStandard.objects.create()
-            _, token = AuthToken.objects.create(user)
+            _, token = AuthToken.objects.create(userstandard)
+            print(token , 'dou')
             return Response({
                 'token': token,
             })

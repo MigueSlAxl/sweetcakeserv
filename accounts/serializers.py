@@ -7,26 +7,30 @@ from rest_framework import generics, viewsets, serializers,status, validators
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    confirm_password = serializers.CharField(write_only=True)
     class Meta:
         imagen=Base64ImageField(required=False)
         model = User
-        fields = ('username', 'password', 'email', 'first_name', 'last_name',
+        fields = ('username', 'password', 'confirm_password', 'email', 'first_name', 'last_name',
                     'is_client', 'is_admin',  'imagen' )
 
         extra_kwargs = {
             "password": {"write_only": True},
-            "email": {
-                "required": True,
-                "validators": [
-                    validators.UniqueValidator(
-                        User.objects.all(), "Ya hay un usuario con el email ingresado"
+            "email": {"required": True,"validators": [validators.UniqueValidator(
+            User.objects.all(), "Ya hay un usuario con el email ingresado"
                     )
                 ]
             }
         }
+        def validate(self, attrs):
+            if attrs.get('password') != attrs.get('confirm_password'):
+                raise serializers.ValidationError("Las contraseñas no coinciden")
+            return attrs
+        
 
     def create(self, validated_data):
-        username = validated_data.get('username')
+        user = User.objects.first()  # Accediendo al Manager desde una instancia del modelo
+        username = validated_data.get('username')    
         password = validated_data.get('password')
         email = validated_data.get('email')
         first_name = validated_data.get('first_name')
@@ -41,6 +45,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             is_client=False,
             is_admin=True
         )
+        user.save()
+        print('guardaooo')
         return user
 
 
@@ -50,12 +56,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 
-class UserSerializer(serializers.ModelSerializer):
-    imagen_base64 = serializers.SerializerMethodField()
 
+
+
+
+
+
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = UserStandard
-        fields = ('is_client', 'is_admin', 'nombre' , 'apellido' , 'contraseña' , 'correo' , 'cargo' , 'rut' , 'local' , 'direccion' , 'ntelefono' , 'nemergencia' , 'imagen_base64')
+        fields = (  'cargo' , 'rut' , 'local' , 'direccion' , 'ntelefono' , 'nemergencia' )
         
         extra_kwargs = {
             "password": {"write_only": True},
@@ -68,13 +82,8 @@ class UserSerializer(serializers.ModelSerializer):
                 ]
             }
         }
-        
         def create(self, validated_data):
-                    
-            nombre = validated_data.get('nombre')
-            apellido = validated_data.get('apellido')
-            contraseña = validated_data.get('contraseña')
-            correo = validated_data.get('correo')
+            
             cargo= validated_data.get('cargo')
             rut= validated_data.get('rut')
             local = validated_data.get('local')
@@ -85,23 +94,21 @@ class UserSerializer(serializers.ModelSerializer):
 
             userstandard = UserStandard.objects.create(
                 local=local,      
-                nombre=nombre,
-                apellido=apellido,
                 cargo=cargo,
                 rut=rut,
                 direccion=direccion,
                 ntelefono=ntelefono,
                 nemergencia=nemergencia,
-                correo=correo,
-                is_client=True,
-                is_admin=False
             )
-            userstandard.set_password(contraseña)
-            userstandard.save()
+            
+            print('guardaooo')
             return userstandard
 
     def get_imagen_base64(self, obj):
         return obj.imagen_base64()
+
+
+
 
 
 
